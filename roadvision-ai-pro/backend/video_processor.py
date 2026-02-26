@@ -4,8 +4,9 @@ import time
 import os
 
 class VideoProcessor:
-    def __init__(self, model_path='best.pt', start_lat=40.7128, start_lon=-74.0060):
-        self.model = YOLO(model_path)
+    def __init__(self, model=None, model_path='best.pt', start_lat=40.7128, start_lon=-74.0060):
+        # Accept an existing model instance to avoid loading twice
+        self.model = model if model is not None else YOLO(model_path)
         self.lat = start_lat
         self.lon = start_lon
         self.detection_count = 0
@@ -23,15 +24,18 @@ class VideoProcessor:
         self.latest_snapshot_path = None
         self.latest_snapshot_data = None
 
+        # Skip more frames in live mode for better latency
+        skip = 10 if is_live else 5
+
         frame_count = 0
         while cap.isOpened():
             success, frame = cap.read()
             if not success:
                 break
 
-            # Process every 5th frame for performance
-            if frame_count % 5 == 0:
-                results = self.model.predict(frame, conf=0.25, verbose=False)
+            # Process every Nth frame for performance
+            if frame_count % skip == 0:
+                results = self.model.predict(frame, conf=0.35, verbose=False)
                 
                 # Annotate frame
                 for r in results:

@@ -52,6 +52,11 @@ ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
 ENV HOST=0.0.0.0
 ENV DEMO_MODE=true
+# Memory-saving settings
+ENV MALLOC_TRIM_THRESHOLD_=65536
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+ENV OPENBLAS_NUM_THREADS=1
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1

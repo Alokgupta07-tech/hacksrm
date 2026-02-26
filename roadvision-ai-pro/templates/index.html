@@ -79,6 +79,13 @@
         </div>
 
         <div class="nav-actions">
+            <button class="btn-glass live-cam-btn" id="liveCameraBtn" title="Start Live Camera">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                <span id="liveCameraBtnText">Live Camera</span>
+                <span class="live-dot" id="liveDot" hidden></span>
+            </button>
             <button class="btn-glass web3-btn" id="connectWalletBtn" title="Connect MetaMask Wallet">
                 <svg class="wallet-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                     stroke-width="2">
@@ -328,6 +335,127 @@
         </div>
     </section>
 
+    <!-- ==================== 4b. Live Camera Section ==================== -->
+    <section class="live-camera-section" id="live-camera" hidden>
+        <div class="section-header">
+            <span class="section-overline">Real-Time Detection</span>
+            <h2 class="section-title">Live Camera Feed</h2>
+            <p class="section-subtitle">Stream your webcam/dashcam for real-time road damage detection with auto-snapshot capture.</p>
+        </div>
+
+        <div class="live-camera-grid">
+            <!-- Left: Camera Feed + System Status -->
+            <div class="live-left-col">
+                <div class="live-feed-container glass">
+                    <div class="live-feed-header">
+                        <div class="live-indicator">
+                            <span class="live-pulse"></span>
+                            <span class="live-text">LIVE SECURE FEED</span>
+                        </div>
+                        <button class="btn-glass btn-sm" id="stopCameraBtn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none">
+                                <rect x="6" y="6" width="12" height="12" rx="1"/>
+                            </svg>
+                            Stop
+                        </button>
+                    </div>
+                    <div class="live-feed-viewport">
+                        <img id="live-camera-feed" alt="Live Camera Feed" />
+                        <div class="feed-no-camera" id="feedNoCamera">
+                            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                <line x1="1" y1="1" x2="23" y2="23" stroke-width="2"/>
+                            </svg>
+                            <p>Camera not available</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status Panel -->
+                <div class="system-status-panel glass">
+                    <div class="status-header">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        <h3>System Status</h3>
+                    </div>
+                    <div class="status-grid">
+                        <div class="status-row">
+                            <span class="status-label"><span class="status-dot green"></span>GPU Instance</span>
+                            <span class="status-value mono" id="status-gpu">YOLO-V8-CONNECTED</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label">Latency</span>
+                            <span class="status-value mono" id="status-latency">~240ms</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label"><span class="status-dot red"></span>Latitude</span>
+                            <span class="status-value mono" id="status-lat">--</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label"><span class="status-dot blue"></span>Longitude</span>
+                            <span class="status-value mono" id="status-lon">--</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label"><span class="status-dot purple"></span>Live Detections</span>
+                            <span class="status-value mono" id="status-detections">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Auto-Snapshot -->
+                    <div class="auto-snapshot" id="autoSnapshotPanel" hidden>
+                        <p class="snapshot-label">LATEST AUTO-SNAPSHOT</p>
+                        <div class="snapshot-container">
+                            <img id="snapshotImage" alt="Auto Snapshot" />
+                            <span class="snapshot-badge">NEW DETECTION</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: JSON Output Panel -->
+            <div class="live-right-col">
+                <div class="json-output-panel">
+                    <div class="json-titlebar">
+                        <div class="json-dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <div class="json-tab">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            <span>prediction_results.json</span>
+                        </div>
+                        <div class="json-live-badge">
+                            <span class="live-dot-sm"></span>
+                            <span>LIVE OUTPUT</span>
+                        </div>
+                    </div>
+                    <div class="json-body">
+                        <pre id="jsonOutput"><code>// Waiting for neural analysis input...
+// Start the live camera or upload an image.
+// Results will appear here in real-time.</code></pre>
+                    </div>
+                    <div class="json-statusbar">
+                        <div class="json-statusbar-left">
+                            <span>&lt;/&gt; JSON</span>
+                            <span>UTF-8</span>
+                        </div>
+                        <div class="json-statusbar-right">
+                            <span>Ln 1, Col 1</span>
+                            <span>Space: 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ==================== 5. Results Section ==================== -->
     <section class="results-section" id="results" hidden>
         <div class="section-header">
@@ -498,6 +626,43 @@
                 </div>
                 <div class="chain-progress">
                     <div class="chain-progress-bar" id="chain-progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- JSON Results Panel (shown after image analysis) -->
+            <div class="results-json-panel" id="results-json-panel" style="display:none;">
+                <div class="json-output-panel">
+                    <div class="json-titlebar">
+                        <div class="json-dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <div class="json-tab">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            <span>prediction_results.json</span>
+                        </div>
+                        <div class="json-live-badge">
+                            <span class="live-dot-sm"></span>
+                            <span>OUTPUT</span>
+                        </div>
+                    </div>
+                    <div class="json-body">
+                        <pre id="resultsJsonOutput"><code>// Analysis results will appear here...</code></pre>
+                    </div>
+                    <div class="json-statusbar">
+                        <div class="json-statusbar-left">
+                            <span>&lt;/&gt; JSON</span>
+                            <span>UTF-8</span>
+                        </div>
+                        <div class="json-statusbar-right">
+                            <span>Ln 1, Col 1</span>
+                            <span>Space: 2</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

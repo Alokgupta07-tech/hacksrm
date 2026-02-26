@@ -308,6 +308,7 @@ def load_yolo_model(model_path: str = None):
     try:
         logger.info(f"Loading YOLOv8 model from {resolved_path}")
         model = YOLO(resolved_path)
+        import gc; gc.collect()          # free loader temporaries
         metrics.model_loaded = True
         metrics.model_load_time = time.time()
         logger.info(f"✅ Model loaded successfully — classes: {model.names}")
@@ -315,6 +316,18 @@ def load_yolo_model(model_path: str = None):
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
         raise
+
+
+def ensure_model_loaded():
+    """Lazy-load model on first use so the server can bind the port fast."""
+    global model, video_processor
+    if model is not None:
+        return model
+    load_yolo_model()
+    if VIDEO_PROCESSOR_AVAILABLE and model is not None:
+        video_processor = VideoProcessor(model=model)
+        logger.info("✅ VideoProcessor initialized (shared model)")
+    return model
 
 # =============================================================================
 # LIFESPAN MANAGEMENT
@@ -330,23 +343,9 @@ async def lifespan(app: FastAPI):
     os.makedirs(_upload_dir, exist_ok=True)
     os.makedirs(_snapshots_dir, exist_ok=True)
     
-    try:
-        load_yolo_model()
-        # Warm up model with a dummy image to trigger JIT compilation
-        if model is not None:
-            import numpy as np
-            _dummy = np.zeros((640, 640, 3), dtype=np.uint8)
-            model(_dummy, verbose=False, imgsz=640)
-            logger.info("✅ Model warmed up (first-inference JIT done)")
-        # Initialize video processor with same model path
-        if VIDEO_PROCESSOR_AVAILABLE and model is not None:
-            _backend_dir = Path(__file__).resolve().parent
-            model_path = str(_backend_dir / "best.pt") if os.path.exists(_backend_dir / "best.pt") else settings.MODEL_PATH
-            video_processor = VideoProcessor(model_path=model_path)
-            logger.info("✅ VideoProcessor initialized")
-        logger.info("✅ Server ready")
-    except Exception as e:
-        logger.error(f"⚠️ Server started with issues: {e}")
+    # Defer model loading to first request — keeps startup fast so Render
+    # can detect the bound port before the 512 MB memory limit is hit.
+    logger.info("✅ Server ready (model will lazy-load on first request)")
     
     yield
     
@@ -587,7 +586,10 @@ async def predict(
         raise HTTPException(status_code=403, detail="Scan limit exceeded. Upgrade your plan.")
     
     if model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
+        try:
+            ensure_model_loaded()
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail=f"Model failed to load: {exc}")
     
     # Validate file
     allowed_extensions = {'.jpg', '.jpeg', '.png'}
@@ -806,6 +808,11 @@ async def video_feed(video_id: str, path: str = Query(...)):
     global video_processor
     
     if video_processor is None:
+        try:
+            ensure_model_loaded()
+        except Exception:
+            pass
+    if video_processor is None:
         raise HTTPException(status_code=503, detail="VideoProcessor not available")
     
     if not os.path.exists(path):
@@ -821,6 +828,11 @@ async def camera_feed(index: int = 0):
     """Live webcam MJPEG feed with YOLO detections."""
     global video_processor
     
+    if video_processor is None:
+        try:
+            ensure_model_loaded()
+        except Exception:
+            pass
     if video_processor is None:
         raise HTTPException(status_code=503, detail="VideoProcessor not available")
     
