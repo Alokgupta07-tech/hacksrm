@@ -16,7 +16,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY roadvision-ai-pro/backend/requirements.txt .
-RUN pip install --no-cache-dir --no-warn-script-location --user -r requirements.txt
+
+# Install CPU-only PyTorch FIRST (no CUDA = saves ~1GB RAM), then the rest
+RUN pip install --no-cache-dir --no-warn-script-location --user \
+    torch==2.1.2+cpu torchvision==0.16.2+cpu \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir --no-warn-script-location --user -r requirements.txt
 
 # Stage 2: Production image
 FROM python:3.11-slim
@@ -53,4 +58,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT} --workers 2"]
+CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT} --workers 1"]
