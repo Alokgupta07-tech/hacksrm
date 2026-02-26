@@ -1,0 +1,217 @@
+/* ==========================================================================
+   RoadVision AI Pro — Glassmorphism v2
+   Refined frosted-glass system — subtler, more Apple-like
+   ========================================================================== */
+
+/* Base Glass */
+.glass{
+    background:rgba(20,20,24,.50);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.06);
+}
+.glass-light{
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.08);
+}
+.glass-dark{
+    background:rgba(10,10,12,.75);
+    backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+    border:1px solid rgba(255,255,255,.04);
+}
+
+/* Glass Card */
+.glass-card{
+    background:rgba(20,20,24,.50);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:var(--radius-xl);padding:var(--space-xl);
+    transition:all .35s var(--ease-out);
+}
+.glass-card:hover{
+    background:rgba(20,20,24,.65);
+    border-color:rgba(77,166,255,.18);
+    box-shadow:0 8px 32px rgba(77,166,255,.06);
+}
+
+/* Glass Panel */
+.glass-panel{
+    background:rgba(20,20,24,.60);
+    backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius-2xl);
+    box-shadow:0 8px 32px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* Glass Button */
+.glass-button{
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius-md);padding:12px 24px;
+    color:#fff;font-weight:500;cursor:pointer;
+    transition:all .3s var(--ease-out);position:relative;overflow:hidden;
+}
+.glass-button::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 50%,rgba(255,255,255,.03) 100%);
+    opacity:0;transition:opacity .3s;
+}
+.glass-button:hover{
+    background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);
+    transform:translateY(-2px);
+}
+.glass-button:hover::before{opacity:1;}
+
+/* Glass Input */
+.glass-input{
+    background:rgba(255,255,255,.03);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius-md);padding:14px 18px;
+    color:#fff;font-size:.9rem;width:100%;transition:all .3s var(--ease-out);
+}
+.glass-input::placeholder{color:rgba(255,255,255,.35);}
+.glass-input:focus{
+    outline:none;background:rgba(255,255,255,.05);
+    border-color:var(--accent-blue);box-shadow:0 0 0 3px var(--glow-blue);
+}
+
+/* Glass Gradient Border */
+.glass-gradient-border{
+    position:relative;background:rgba(20,20,24,.70);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-radius:var(--radius-xl);padding:2px;
+}
+.glass-gradient-border::before{
+    content:'';position:absolute;inset:0;border-radius:var(--radius-xl);padding:1px;
+    background:linear-gradient(135deg,rgba(77,166,255,.35),rgba(0,240,255,.2),rgba(52,211,153,.2),rgba(77,166,255,.35));
+    background-size:200% 200%;
+    mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    mask-composite:exclude;-webkit-mask-composite:xor;
+    animation:border-glow 4s linear infinite;
+}
+@keyframes border-glow{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+/* Glass Modal */
+.glass-modal{
+    background:rgba(20,20,24,.88);
+    backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+    border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-2xl);
+    box-shadow:0 25px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* Glass Nav */
+.glass-nav{
+    background:rgba(10,10,12,.65);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-bottom:1px solid rgba(255,255,255,.04);
+}
+
+/* Glass Tooltip */
+.glass-tooltip{
+    background:rgba(20,20,24,.88);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);
+    padding:8px 14px;font-size:.75rem;color:#fff;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+
+/* Glass Badge */
+.glass-badge{
+    background:rgba(77,166,255,.10);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(77,166,255,.2);border-radius:var(--radius-full);
+    padding:4px 14px;font-size:.75rem;font-weight:500;color:var(--accent-blue);
+}
+
+/* Glass Status */
+.glass-status{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 14px;background:rgba(255,255,255,.04);
+    backdrop-filter:blur(10px);border-radius:var(--radius-full);font-size:.75rem;
+}
+.glass-status-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);
+}
+.glass-status-dot.warning{background:var(--accent-yellow);box-shadow:0 0 6px var(--accent-yellow);}
+.glass-status-dot.error{background:var(--accent-red);box-shadow:0 0 6px var(--accent-red);}
+
+/* Glass Divider */
+.glass-divider{
+    height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+    margin:24px 0;
+}
+
+/* Glass Scrollbar */
+.glass-scroll::-webkit-scrollbar{width:6px;height:6px;}
+.glass-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.02);border-radius:3px;}
+.glass-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px;}
+.glass-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.14);}
+
+/* Glass Table */
+.glass-table{width:100%;border-collapse:separate;border-spacing:0;}
+.glass-table th,.glass-table td{padding:16px;text-align:left;border-bottom:1px solid rgba(255,255,255,.04);}
+.glass-table th{
+    background:rgba(255,255,255,.02);font-weight:600;font-size:.75rem;
+    text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);
+}
+.glass-table tr:hover td{background:rgba(255,255,255,.02);}
+
+/* Glass Tabs */
+.glass-tabs{
+    display:flex;gap:4px;padding:4px;
+    background:rgba(0,0,0,.25);border-radius:var(--radius-md);
+}
+.glass-tab{
+    padding:10px 20px;background:transparent;border:none;
+    border-radius:var(--radius-sm);color:var(--text-secondary);
+    font-weight:500;cursor:pointer;transition:all .3s var(--ease-out);
+}
+.glass-tab.active{background:rgba(77,166,255,.15);color:var(--accent-blue);}
+.glass-tab:hover:not(.active){background:rgba(255,255,255,.04);color:var(--text-primary);}
+
+/* Glass Progress */
+.glass-progress{height:6px;background:rgba(255,255,255,.04);border-radius:var(--radius-full);overflow:hidden;}
+.glass-progress-bar{
+    height:100%;background:linear-gradient(90deg,var(--accent-blue),var(--accent-green));
+    border-radius:var(--radius-full);transition:width .6s var(--ease-out);
+    position:relative;overflow:hidden;
+}
+.glass-progress-bar::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+    animation:shimmer 2s infinite;
+}
+@keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+/* Glass Toast */
+.glass-toast{
+    position:fixed;bottom:24px;right:24px;
+    padding:16px 24px;background:rgba(20,20,24,.92);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-lg);
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+    display:flex;align-items:center;gap:12px;
+    animation:toast-in .35s var(--ease-out);
+}
+@keyframes toast-in{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.glass-toast.success{border-left:3px solid var(--accent-green);}
+.glass-toast.error{border-left:3px solid var(--accent-red);}
+.glass-toast.warning{border-left:3px solid var(--accent-yellow);}
+
+/* Glass Skeleton */
+.glass-skeleton{
+    background:linear-gradient(90deg,rgba(255,255,255,.02) 25%,rgba(255,255,255,.06) 50%,rgba(255,255,255,.02) 75%);
+    background-size:200% 100%;border-radius:var(--radius-sm);
+    animation:skeleton-loading 1.5s infinite;
+}
+@keyframes skeleton-loading{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* Responsive Glass */
+@media(max-width:768px){
+    .glass-card,.glass-panel{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+}

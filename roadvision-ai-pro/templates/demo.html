@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadVision AI Pro - Demo Mode</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/glass.css">
+    
+    <style>
+        .demo-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .demo-stage {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+        }
+        
+        .demo-image-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+        
+        .demo-image {
+            width: 100%;
+            display: block;
+        }
+        
+        .demo-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.8));
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .demo-status {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-shadow: 0 0 20px var(--accent-blue-glow);
+        }
+        
+        .demo-bounding-box {
+            position: absolute;
+            border: 2px solid var(--accent-red);
+            box-shadow: 0 0 20px var(--accent-red-glow);
+            opacity: 0;
+        }
+        
+        .demo-bounding-box::before {
+            content: attr(data-confidence);
+            position: absolute;
+            top: -24px;
+            left: 0;
+            background: var(--accent-red);
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        
+        .demo-progress {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 2rem;
+        }
+        
+        .demo-progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .demo-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        .demo-progress-text {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .demo-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-metric {
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .demo-metric-value {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+        
+        .demo-metric-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.5rem;
+        }
+        
+        .demo-close-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .demo-close-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .demo-close-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .demo-close-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+        
+        .demo-market-size {
+            display: flex;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .market-item {
+            text-align: center;
+        }
+        
+        .market-value {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+        
+        .market-label {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            margin-top: 0.5rem;
+        }
+        
+        .demo-cta {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .spotlight {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.2) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="three-canvas" class="three-background"></canvas>
+    
+    <div class="demo-container">
+        <div class="demo-stage">
+            <h1 class="demo-title" style="font-size: 2rem; margin-bottom: 2rem;">
+                RoadVision AI <span style="color: var(--accent-blue);">Pro</span>
+            </h1>
+            
+            <div class="demo-progress">
+                <div class="demo-progress-bar">
+                    <div class="demo-progress-fill" id="demo-progress"></div>
+                </div>
+                <p class="demo-progress-text" id="demo-status">Initializing...</p>
+            </div>
+            
+            <div class="demo-image-container" id="demo-image-container" style="opacity: 0;">
+                <img class="demo-image" id="demo-image" alt="Road surface">
+                <div class="spotlight" id="spotlight"></div>
+            </div>
+            
+            <div class="demo-metrics" id="demo-metrics">
+                <div class="demo-metric">
+                    <div class="demo-metric-value" id="metric-time">--</div>
+                    <div class="demo-metric-label">Detection Time</div>
+                </div>
+                <div class="demo-metric">
+                    <div class="demo-metric-value" id="metric-accuracy">--</div>
+                    <div class="demo-metric-label">Accuracy</div>
+                </div>
+                <div class="demo-metric">
+                    <div class="demo-metric-value" id="metric-cracks">--</div>
+                    <div class="demo-metric-label">Cracks Found</div>
+                </div>
+                <div class="demo-metric">
+                    <div class="demo-metric-value" id="metric-severity">--</div>
+                    <div class="demo-metric-label">Severity</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-close-screen" id="demo-close">
+        <h2 class="demo-close-title">RoadVision AI Pro</h2>
+        <p class="demo-close-subtitle">Infrastructure Intelligence for Smart Cities</p>
+        
+        <div class="demo-market-size">
+            <div class="market-item">
+                <div class="market-value">$12B</div>
+                <div class="market-label">Market Size 2024</div>
+            </div>
+            <div class="market-item">
+                <div class="market-value">25%</div>
+                <div class="market-label">YoY Growth</div>
+            </div>
+            <div class="market-item">
+                <div class="market-value">500+</div>
+                <div class="market-label">Cities Target</div>
+            </div>
+        </div>
+        
+        <div class="demo-cta">
+            <a href="/" class="btn-primary btn-large">Try It Now</a>
+            <a href="#" class="btn-glass btn-large">Contact Sales</a>
+        </div>
+    </div>
+    
+    <script src="/static/js/threeScene.js"></script>
+    <script>
+        // Demo Script
+        const demo = {
+            async run() {
+                // Step 1: Create demo image
+                await this.createDemoImage();
+                
+                // Step 2: Show image
+                await this.showImage();
+                
+                // Step 3: Analyzing
+                await this.analyze();
+                
+                // Step 4: Show results
+                await this.showResults();
+                
+                // Step 5: Close screen
+                await this.showCloseScreen();
+            },
+            
+            createDemoImage() {
+                return new Promise(resolve => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800;
+                    canvas.height = 600;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Asphalt background
+                    ctx.fillStyle = '#606060';
+                    ctx.fillRect(0, 0, 800, 600);
+                    
+                    // Add texture
+                    for (let i = 0; i < 5000; i++) {
+                        ctx.fillStyle = Math.random() > 0.5 ? '#707070' : '#505050';
+                        ctx.fillRect(
+                            Math.random() * 800,
+                            Math.random() * 600,
+                            2, 2
+                        );
+                    }
+                    
+                    // Draw cracks
+                    ctx.strokeStyle = '#202020';
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    
+                    // Crack 1 - Large
+                    ctx.beginPath();
+                    ctx.moveTo(150, 150);
+                    ctx.lineTo(400, 200);
+                    ctx.lineTo(450, 280);
+                    ctx.stroke();
+                    
+                    // Crack 2 - Medium
+                    ctx.beginPath();
+                    ctx.moveTo(500, 350);
+                    ctx.lineTo(700, 400);
+                    ctx.stroke();
+                    
+                    // Crack 3 - Small
+                    ctx.beginPath();
+                    ctx.moveTo(200, 450);
+                    ctx.lineTo(350, 480);
+                    ctx.stroke();
+                    
+                    // Crack 4 - Branching
+                    ctx.beginPath();
+                    ctx.moveTo(550, 100);
+                    ctx.lineTo(600, 200);
+                    ctx.lineTo(650, 220);
+                    ctx.stroke();
+                    
+                    const img = document.getElementById('demo-image');
+                    img.src = canvas.toDataURL();
+                    
+                    resolve();
+                });
+            },
+            
+            async showImage() {
+                const container = document.getElementById('demo-image-container');
+                
+                gsap.to(container, {
+                    opacity: 1,
+                    duration: 0.8,
+                    ease: 'power2.out'
+                });
+                
+                await this.wait(800);
+            },
+            
+            async analyze() {
+                const progress = document.getElementById('demo-progress');
+                const status = document.getElementById('demo-status');
+                
+                const steps = [
+                    { pct: 20, text: 'Loading image...' },
+                    { pct: 40, text: 'Preprocessing...' },
+                    { pct: 60, text: 'Running YOLOv8 inference...' },
+                    { pct: 80, text: 'Analyzing detections...' },
+                    { pct: 100, text: 'Complete!' }
+                ];
+                
+                for (const step of steps) {
+                    progress.style.width = step.pct + '%';
+                    status.textContent = step.text;
+                    await this.wait(600);
+                }
+            },
+            
+            async showResults() {
+                // Add bounding boxes
+                const container = document.getElementById('demo-image-container');
+                const boxes = [
+                    { x: 18, y: 25, w: 37, h: 21, conf: '94%' },
+                    { x: 62, y: 58, w: 25, h: 8, conf: '87%' },
+                    { x: 25, y: 75, w: 18, h: 5, conf: '82%' },
+                    { x: 68, y: 16, w: 12, h: 20, conf: '79%' }
+                ];
+                
+                boxes.forEach((box, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'demo-bounding-box';
+                    el.style.cssText = `
+                        left: ${box.x}%;
+                        top: ${box.y}%;
+                        width: ${box.w}%;
+                        height: ${box.h}%;
+                    `;
+                    el.dataset.confidence = box.conf;
+                    container.appendChild(el);
+                    
+                    gsap.to(el, {
+                        opacity: 1,
+                        duration: 0.5,
+                        delay: i * 0.2,
+                        ease: 'power2.out'
+                    });
+                });
+                
+                // Show metrics
+                const metrics = document.querySelectorAll('.demo-metric');
+                metrics.forEach((m, i) => {
+                    gsap.to(m, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.5,
+                        delay: 0.5 + i * 0.1,
+                        ease: 'power2.out'
+                    });
+                });
+                
+                // Animate metric values
+                this.animateValue('metric-time', '234', 'ms');
+                this.animateValue('metric-accuracy', '94', '%+');
+                this.animateValue('metric-cracks', '4', '');
+                this.animateValue('metric-severity', 'Moderate', '');
+                
+                await this.wait(3000);
+            },
+            
+            animateValue(id, value, suffix) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                
+                if (isNaN(value)) {
+                    el.textContent = value + suffix;
+                    return;
+                }
+                
+                const target = parseInt(value);
+                const duration = 1000;
+                const start = 0;
+                const startTime = performance.now();
+                
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    
+                    const current = Math.floor(start + (target - start) * eased);
+                    el.textContent = current + suffix;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                requestAnimationFrame(animate);
+            },
+            
+            async showCloseScreen() {
+                const closeScreen = document.getElementById('demo-close');
+                closeScreen.classList.add('active');
+                
+                gsap.from('.demo-close-title', {
+                    y: 50,
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: 'power2.out'
+                });
+                
+                gsap.from('.demo-market-size .market-item', {
+                    y: 30,
+                    opacity: 0,
+                    duration: 0.6,
+                    stagger: 0.1,
+                    delay: 0.3,
+                    ease: 'power2.out'
+                });
+            },
+            
+            wait(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        };
+        
+        // Run demo
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => demo.run(), 500);
+        });
+    </script>
+</body>
+</html>

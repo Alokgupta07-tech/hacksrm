@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Training Pipeline - RoadVision AI Pro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/glass.css">
+    
+    <style>
+        .training-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 2rem 2rem;
+        }
+        
+        .training-header {
+            grid-column: 1 / -1;
+            margin-bottom: 1rem;
+        }
+        
+        .training-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .training-subtitle {
+            color: var(--text-secondary);
+        }
+        
+        .training-panel {
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+        
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        
+        /* Dataset Upload */
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--accent-blue);
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .upload-zone-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            color: var(--accent-blue);
+        }
+        
+        .upload-zone-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-zone-hint {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+        
+        /* Dataset Preview */
+        .dataset-preview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .preview-image {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .preview-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Training Controls */
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .control-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .control-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.875rem;
+        }
+        
+        .control-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        /* Progress Bar */
+        .training-progress {
+            margin-top: 1.5rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .progress-value {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--accent-blue);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Terminal Log */
+        .terminal {
+            background: #0a0a0f;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        .terminal-line {
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+        }
+        
+        .terminal-line.success {
+            color: var(--accent-green);
+        }
+        
+        .terminal-line.error {
+            color: var(--accent-red);
+        }
+        
+        .terminal-line.info {
+            color: var(--accent-blue);
+        }
+        
+        .terminal-timestamp {
+            color: var(--text-tertiary);
+            margin-right: 0.5rem;
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .metric-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 0.25rem;
+        }
+        
+        /* Charts */
+        .chart-container {
+            height: 200px;
+            margin-top: 1rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .training-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .dataset-preview {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="main-nav" style="background: var(--bg-primary);">
+        <div class="nav-brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="M21 12c.552 0 1-.448 1-1V8c0-2.761-2.239-5-5-5H7C4.239 3 2 5.239 2 8v3c0 .552.448 1 1 1"/>
+                </svg>
+            </div>
+            <span class="brand-text">Training<span class="brand-accent">Lab</span></span>
+        </div>
+        <div class="nav-actions">
+            <a href="/" class="btn-glass">Back to App</a>
+        </div>
+    </nav>
+    
+    <div class="training-layout">
+        <header class="training-header">
+            <h1 class="training-title">AI Training Pipeline</h1>
+            <p class="training-subtitle">Train and deploy custom YOLOv8 models for road crack detection</p>
+        </header>
+        
+        <div class="training-panel">
+            <h2 class="panel-title">Dataset</h2>
+            
+            <div class="upload-zone" id="dataset-upload">
+                <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p class="upload-zone-text">Drop dataset here</p>
+                <p class="upload-zone-hint">or click to browse</p>
+            </div>
+            
+            <div class="dataset-preview" id="dataset-preview">
+                <div class="preview-image"><img src="/static/assets/placeholder1.jpg" alt=""></div>
+                <div class="preview-image"><img src="/static/assets/placeholder2.jpg" alt=""></div>
+                <div class="preview-image"><img src="/static/assets/placeholder3.jpg" alt=""></div>
+                <div class="preview-image"><img src="/static/assets/placeholder4.jpg" alt=""></div>
+            </div>
+            
+            <div class="training-progress" id="training-progress" hidden>
+                <div class="progress-header">
+                    <span class="progress-label">Training Progress</span>
+                    <span class="progress-value" id="progress-value">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="training-panel">
+            <h2 class="panel-title">Training Configuration</h2>
+            
+            <div class="control-group">
+                <label class="control-label">Model Size</label>
+                <select class="control-input">
+                    <option value="n">YOLOv8n (Nano)</option>
+                    <option value="s">YOLOv8s (Small)</option>
+                    <option value="m" selected>YOLOv8m (Medium)</option>
+                    <option value="l">YOLOv8l (Large)</option>
+                    <option value="x">YOLOv8x (Extra Large)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">Epochs</label>
+                <input type="number" class="control-input" value="100" min="10" max="500">
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">Batch Size</label>
+                <input type="number" class="control-input" value="16" min="1" max="64">
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">Image Size</label>
+                <input type="number" class="control-input" value="640" min="320" max="1280" step="32">
+            </div>
+            
+            <button class="btn-primary btn-full" id="start-training">Start Training</button>
+            <button class="btn-glass btn-full" id="stop-training" hidden style="margin-top: 0.5rem;">Stop Training</button>
+        </div>
+        
+        <div class="training-panel">
+            <h2 class="panel-title">Training Logs</h2>
+            <div class="terminal" id="terminal">
+                <div class="terminal-line info">
+                    <span class="terminal-timestamp">[10:23:45]</span>
+                    Training environment ready
+                </div>
+                <div class="terminal-line">
+                    <span class="terminal-timestamp">[10:23:46]</span>
+                    Waiting for dataset upload...
+                </div>
+            </div>
+        </div>
+        
+        <div class="training-panel">
+            <h2 class="panel-title">Live Metrics</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-loss">0.00</div>
+                    <div class="metric-label">Loss</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-map">0.00</div>
+                    <div class="metric-label">mAP</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-epoch">0/100</div>
+                    <div class="metric-label">Epoch</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metric-time">00:00</div>
+                    <div class="metric-label">Time</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="loss-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Training Pipeline
+        const training = {
+            isRunning: false,
+            currentEpoch: 0,
+            totalEpochs: 100,
+            startTime: null,
+            lossData: [],
+            
+            init() {
+                this.initCharts();
+                this.bindEvents();
+            },
+            
+            initCharts() {
+                const ctx = document.getElementById('loss-chart');
+                if (ctx) {
+                    this.lossChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Loss',
+                                data: [],
+                                borderColor: '#00d4ff',
+                                backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { display: false },
+                                y: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                    ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            
+            bindEvents() {
+                document.getElementById('start-training')?.addEventListener('click', () => {
+                    this.start();
+                });
+                
+                document.getElementById('stop-training')?.addEventListener('click', () => {
+                    this.stop();
+                });
+            },
+            
+            start() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.currentEpoch = 0;
+                this.startTime = Date.now();
+                this.lossData = [];
+                
+                // Update UI
+                document.getElementById('start-training').hidden = true;
+                document.getElementById('stop-training').hidden = false;
+                document.getElementById('training-progress').hidden = false;
+                
+                this.log('Starting training...', 'info');
+                this.log('Model: YOLOv8m', 'info');
+                this.log('Epochs: 100', 'info');
+                
+                // Simulate training
+                this.trainingInterval = setInterval(() => {
+                    this.simulateEpoch();
+                }, 500);
+            },
+            
+            stop() {
+                this.isRunning = false;
+                clearInterval(this.trainingInterval);
+                
+                document.getElementById('start-training').hidden = false;
+                document.getElementById('stop-training').hidden = true;
+                
+                this.log('Training stopped by user', 'warning');
+            },
+            
+            simulateEpoch() {
+                this.currentEpoch++;
+                
+                // Simulate loss decreasing
+                const loss = 2.5 * Math.exp(-this.currentEpoch / 30) + 0.1 + Math.random() * 0.05;
+                const map = Math.min(0.95, this.currentEpoch / 100 * 0.9 + Math.random() * 0.05);
+                
+                this.lossData.push(loss);
+                
+                // Update progress
+                const progress = (this.currentEpoch / this.totalEpochs) * 100;
+                document.getElementById('progress-value').textContent = progress.toFixed(1) + '%';
+                document.getElementById('progress-fill').style.width = progress + '%';
+                
+                // Update metrics
+                document.getElementById('metric-loss').textContent = loss.toFixed(4);
+                document.getElementById('metric-map').textContent = map.toFixed(3);
+                document.getElementById('metric-epoch').textContent = `${this.currentEpoch}/${this.totalEpochs}`;
+                
+                // Update time
+                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('metric-time').textContent = `${mins}:${secs}`;
+                
+                // Update chart
+                if (this.lossChart) {
+                    this.lossChart.data.labels.push(this.currentEpoch);
+                    this.lossChart.data.datasets[0].data.push(loss);
+                    this.lossChart.update('none');
+                }
+                
+                // Log
+                if (this.currentEpoch % 10 === 0) {
+                    this.log(`Epoch ${this.currentEpoch}/${this.totalEpochs} - Loss: ${loss.toFixed(4)}, mAP: ${map.toFixed(3)}`);
+                }
+                
+                // Complete
+                if (this.currentEpoch >= this.totalEpochs) {
+                    this.complete();
+                }
+            },
+            
+            complete() {
+                this.isRunning = false;
+                clearInterval(this.trainingInterval);
+                
+                document.getElementById('start-training').hidden = false;
+                document.getElementById('stop-training').hidden = true;
+                
+                this.log('Training completed!', 'success');
+                this.log('Model saved: best.pt', 'success');
+            },
+            
+            log(message, type = '') {
+                const terminal = document.getElementById('terminal');
+                const line = document.createElement('div');
+                line.className = `terminal-line ${type}`;
+                
+                const now = new Date();
+                const time = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+                
+                line.innerHTML = `<span class="terminal-timestamp">${time}</span>${message}`;
+                terminal.appendChild(line);
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            training.init();
+        });
+    </script>
+</body>
+</html>

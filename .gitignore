@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+venv2/
+ENV/
+
+# Model weights (large files)
+# *.pt  # Uncomment if you don't want to track model weights
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node
+node_modules/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+*.log
+server_log.txt
+
+# Temp files
+temp_*/
+snapshots/*.jpg
+snapshots/*.png
+
+# Docker
+docker-compose.override.yml
+
+# Runs / Training outputs
+runs/
+wandb/
+
+# Byte-compiled
+*.pyc

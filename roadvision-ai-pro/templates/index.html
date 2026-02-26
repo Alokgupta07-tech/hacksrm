@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadVision AI Pro — See the Invisible</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛣️</text></svg>">
+    <meta name="description"
+        content="AI-powered infrastructure inspection platform. Detect road surface damage with millimeter precision in under 120ms.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Three.js (r152 for better effects) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- GSAP + ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Ethers.js v6 (Web3 wallet integration) -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/main.css?v=11">
+    <link rel="stylesheet" href="/static/css/animations.css?v=8">
+    <link rel="stylesheet" href="/static/css/glass.css?v=8">
+</head>
+
+<body data-theme="dark">
+
+    <!-- Three.js Canvas Background -->
+    <canvas id="three-canvas" class="three-background"></canvas>
+
+    <!-- System HUD -->
+    <div class="system-hud" id="system-hud">
+        <div class="hud-panel">
+            <div class="hud-item">
+                <span class="hud-indicator" id="api-status"></span>
+                <span class="hud-label">API</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-value" id="hud-uptime">00:00</span>
+                <span class="hud-label">Uptime</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-value" id="hud-requests">0</span>
+                <span class="hud-label">Requests</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== Navigation ==================== -->
+    <nav class="main-nav" id="main-nav">
+        <div class="nav-brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4" />
+                    <path d="M21 12c.552 0 1-.448 1-1V8c0-2.761-2.239-5-5-5H7C4.239 3 2 5.239 2 8v3c0 .552.448 1 1 1" />
+                    <path d="M3 12v4c0 2.761 2.239 5 5 5h10c2.761 0 5-2.239 5-5v-4" />
+                </svg>
+            </div>
+            <span class="brand-text">RoadVision<span class="brand-accent">Pro</span></span>
+        </div>
+
+        <div class="nav-links">
+            <a href="#hero" class="nav-link active">Home</a>
+            <a href="#upload" class="nav-link">Analyze</a>
+            <a href="#dashboard" class="nav-link">Dashboard</a>
+            <a href="#enterprise" class="nav-link">Enterprise</a>
+        </div>
+
+        <div class="nav-actions">
+            <button class="btn-glass web3-btn" id="connectWalletBtn" title="Connect MetaMask Wallet">
+                <svg class="wallet-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+                    <circle cx="17" cy="14" r="1.5" />
+                </svg>
+                <span id="walletBtnText">Connect Wallet</span>
+            </button>
+            {% if not demo_mode %}
+            <button class="btn-glass" id="login-btn">Sign In</button>
+            <button class="btn-primary" id="signup-btn">Get Started</button>
+            {% else %}
+            <span class="glass-badge">Demo Mode</span>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- ==================== 1. Hero — Cinematic 3D Entrance ==================== -->
+    <section class="hero-section" id="hero">
+        <!-- Cinematic scanning beam overlay -->
+        <div class="hero-scan-beam"></div>
+
+        <!-- Floating particle overlay -->
+        <div class="hero-particles-overlay">
+            <div class="particle-float p1"></div>
+            <div class="particle-float p2"></div>
+            <div class="particle-float p3"></div>
+            <div class="particle-float p4"></div>
+            <div class="particle-float p5"></div>
+            <div class="particle-float p6"></div>
+            <div class="particle-float p7"></div>
+            <div class="particle-float p8"></div>
+        </div>
+
+        <!-- Glowing orb backdrop -->
+        <div class="hero-glow-orbs">
+            <div class="glow-orb orb-1"></div>
+            <div class="glow-orb orb-2"></div>
+            <div class="glow-orb orb-3"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-badge" data-animate="fade-up">
+                <span class="badge-dot"></span>
+                <span>AI-Powered Infrastructure Intelligence</span>
+            </div>
+
+            <h1 class="hero-title">
+                <span class="title-line" data-animate="fade-up">See the</span>
+                <span class="title-line accent text-gradient-animated" data-animate="fade-up"
+                    data-delay="0.1">Invisible.</span>
+            </h1>
+
+            <p class="hero-subtitle" data-animate="fade-up" data-delay="0.2">
+                Detect, classify, and prioritize road surface damage with sub-millimeter precision —
+                powered by state-of-the-art deep learning that works in under 120 milliseconds.
+            </p>
+
+            <div class="hero-stats" data-animate="fade-up" data-delay="0.3">
+                <div class="stat-card-3d glass-gradient-border">
+                    <div class="stat-card-3d-inner">
+                        <span class="stat-value hero-counter" id="stat-detections" data-target="1247"
+                            data-suffix="">0</span>
+                        <span class="stat-label">Images Analyzed</span>
+                    </div>
+                </div>
+                <div class="stat-card-3d glass-gradient-border">
+                    <div class="stat-card-3d-inner">
+                        <span class="stat-value hero-counter" id="stat-accuracy" data-target="98.2" data-suffix="%"
+                            data-decimals="1">0%</span>
+                        <span class="stat-label">Model Accuracy</span>
+                    </div>
+                </div>
+                <div class="stat-card-3d glass-gradient-border">
+                    <div class="stat-card-3d-inner">
+                        <span class="stat-value hero-counter" id="stat-inference" data-target="118"
+                            data-suffix="ms">0ms</span>
+                        <span class="stat-label">Avg Inference</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-cta" data-animate="fade-up" data-delay="0.4">
+                <a href="#upload" class="btn-primary btn-large btn-glow">
+                    <span>Start Analysis</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="/demo?mode=investor" class="btn-glass btn-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    <span>Watch Demo</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="ai-preview-panel glass-gradient-border" id="ai-preview-panel">
+                <div class="ai-preview-panel-inner">
+                    <div class="ai-preview-header">
+                        <div class="preview-status">
+                            <span class="status-dot"></span>
+                            <span id="ai-preview-status">Initializing...</span>
+                        </div>
+                        <span style="color:var(--text-tertiary)">YOLOv8 Engine</span>
+                    </div>
+                    <div class="ai-preview-viewport" id="ai-preview-viewport">
+                        <div class="ai-preview-scanline"></div>
+                    </div>
+                    <div class="ai-preview-footer">
+                        <span class="detections-badge" id="ai-preview-count">0 detected</span>
+                        <span id="ai-preview-fps">-- FPS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 2. Problem Statement ==================== -->
+    <section class="problem-section" id="problem">
+        <div class="section-header">
+            <span class="section-overline" data-animate="fade-up">The Hidden Crisis</span>
+            <h2 class="section-title" data-animate="fade-up" data-delay="0.1">Infrastructure is aging.<br>Inspection
+                hasn't kept up.</h2>
+            <p class="section-subtitle" data-animate="fade-up" data-delay="0.2">
+                Manual road surveys are slow, expensive, and dangerously inconsistent.
+                Critical damage goes undetected until it becomes catastrophic.
+            </p>
+        </div>
+
+        <div class="problem-grid">
+            <div class="problem-card" data-animate="fade-up" data-delay="0.1">
+                <div class="problem-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                </div>
+                <h3>$400B Annual Cost</h3>
+                <p>Road damage costs governments and drivers hundreds of billions every year in repairs, accidents, and
+                    lost productivity.</p>
+            </div>
+
+            <div class="problem-card" data-animate="fade-up" data-delay="0.2">
+                <div class="problem-icon yellow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </div>
+                <h3>Weeks of Delay</h3>
+                <p>Traditional inspection takes 6-8 weeks per district. By then, minor cracks have become structural
+                    failures.</p>
+            </div>
+
+            <div class="problem-card" data-animate="fade-up" data-delay="0.3">
+                <div class="problem-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </div>
+                <h3>Human Error</h3>
+                <p>Visual inspection misses up to 40% of subsurface damage. AI sees what the human eye cannot.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 3. Metrics Bar ==================== -->
+    <section class="metrics-section" id="metrics">
+        <div class="metrics-grid">
+            <div class="metric-item metric-accent-blue" data-animate="fade-up">
+                <h3><span class="metric-num" data-count="98">0</span>%</h3>
+                <p>Detection Accuracy</p>
+            </div>
+            <div class="metric-item metric-accent-cyan" data-animate="fade-up" data-delay="0.1">
+                <h3>&lt;<span class="metric-num" data-count="120">0</span>ms</h3>
+                <p>Inference Time</p>
+            </div>
+            <div class="metric-item metric-accent-green" data-animate="fade-up" data-delay="0.2">
+                <h3><span class="metric-num" data-count="10">0</span>x</h3>
+                <p>Faster Than Manual</p>
+            </div>
+            <div class="metric-item" data-animate="fade-up" data-delay="0.3">
+                <h3>Enterprise</h3>
+                <p>Grade Security</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 4. Upload — Product Reveal ==================== -->
+    <section class="upload-section" id="upload">
+        <div class="section-header">
+            <span class="section-overline" data-animate="fade-up">Inspect at Scale</span>
+            <h2 class="section-title" data-animate="fade-up" data-delay="0.1">Upload. Analyze. Act.</h2>
+            <p class="section-subtitle" data-animate="fade-up" data-delay="0.2">
+                Drop a road surface image and let our AI reveal every crack, classify severity,
+                and generate an actionable report — in seconds.
+            </p>
+        </div>
+
+        <div class="upload-container" data-animate="fade-up" data-delay="0.3">
+            <div class="upload-area-3d" id="upload-area">
+                <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.mp4,.avi,.mov,.mkv" hidden>
+
+                <div class="upload-content">
+                    <div class="upload-icon-3d">
+                        <div class="icon-ring"></div>
+                        <div class="icon-ring"></div>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                    </div>
+                    <p class="upload-text">Drop your image or video here</p>
+                    <p class="upload-hint">or <span class="upload-link">click to browse</span></p>
+                    <p class="upload-formats">JPG, PNG, MP4, AVI, MOV — max 10 MB</p>
+                </div>
+
+                <div class="upload-preview" id="upload-preview" hidden>
+                    <img id="preview-image" alt="Preview">
+                    <video id="preview-video" class="hidden" muted loop></video>
+                    <div class="preview-overlay">
+                        <button class="btn-reset" id="reset-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 12" />
+                                <path d="M3 3v9h9" />
+                            </svg>
+                            Change Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-analyze" id="analyze-btn" disabled>
+                <span class="btn-text">Analyze</span>
+                <span class="btn-loader" hidden>
+                    <span class="loader-ring-3d"></span>
+                    <span>AI Processing...</span>
+                </span>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== 5. Results Section ==================== -->
+    <section class="results-section" id="results" hidden>
+        <div class="section-header">
+            <span class="section-overline">Analysis Complete</span>
+            <h2 class="section-title">Detection Results</h2>
+            <p class="section-subtitle">AI-powered crack detection analysis with severity classification</p>
+        </div>
+
+        <div class="results-grid">
+            <!-- Visualization -->
+            <div class="viz-container">
+                <div class="viz-header">
+                    <h3 class="viz-title">Detection Visualization</h3>
+                    <div class="view-toggle-3d">
+                        <button class="toggle-btn active" data-view="2d">2D View</button>
+                        <button class="toggle-btn" data-view="3d">3D Depth</button>
+                    </div>
+                </div>
+                <div class="viz-wrapper">
+                    <canvas id="detection-canvas"></canvas>
+                    <div id="three-viz-container" hidden></div>
+                    <!-- MJPEG video feed for video analysis -->
+                    <img id="video-feed-viewer" class="video-feed hidden" alt="Video Feed">
+                    <div class="scanning-overlay" id="scanning-overlay" hidden>
+                        <div class="scan-line"></div>
+                        <div class="scan-grid"></div>
+                        <div class="radar-pulse"></div>
+                    </div>
+                </div>
+                <div class="viz-legend">
+                    <div class="legend-item">
+                        <span class="legend-bar high"></span>
+                        <span>High (≥80%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-bar medium"></span>
+                        <span>Medium (50-80%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-bar low"></span>
+                        <span>Low (&lt;50%)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Panel -->
+            <div class="dashboard-panel">
+                <div class="gauge-card-3d">
+                    <h3 class="card-title">Severity Assessment</h3>
+                    <div class="gauge-3d" id="severity-gauge-3d">
+                        <div class="gauge-face">
+                            <div class="gauge-arc"></div>
+                            <div class="gauge-needle" id="gauge-needle"></div>
+                            <div class="gauge-center">
+                                <span class="gauge-value" id="gauge-value">0%</span>
+                                <span class="gauge-level" id="gauge-level">--</span>
+                            </div>
+                        </div>
+                        <div class="gauge-glow" id="gauge-glow"></div>
+                    </div>
+                </div>
+
+                <div class="stats-grid-3d">
+                    <div class="stat-card-glass" data-tilt>
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M3 9h18M9 21V9" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="result-count">0</span>
+                            <span class="stat-label">Cracks</span>
+                        </div>
+                    </div>
+                    <div class="stat-card-glass" data-tilt>
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="result-confidence">0%</span>
+                            <span class="stat-label">Confidence</span>
+                        </div>
+                    </div>
+                    <div class="stat-card-glass" data-tilt>
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="result-time">0ms</span>
+                            <span class="stat-label">Inference</span>
+                        </div>
+                    </div>
+                    <div class="stat-card-glass" data-tilt>
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                <path d="M2 17l10 5 10-5" />
+                                <path d="M2 12l10 5 10-5" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="result-score">0</span>
+                            <span class="stat-label">Score</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Severity Level Badge -->
+                <div class="severity-level-card glass">
+                    <span class="severity-badge" id="result-severity-level">--</span>
+                </div>
+
+                <!-- GPS Coordinates -->
+                <div class="gps-row glass hidden">
+                    <div class="gps-icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="gps-info">
+                        <span class="gps-label">GPS Location</span>
+                        <span class="gps-value" id="result-gps">--</span>
+                    </div>
+                </div>
+
+                <!-- Per-Class Breakdown -->
+                <div class="breakdown-card glass hidden">
+                    <h4 class="breakdown-title">Detection Breakdown</h4>
+                    <div id="class-breakdown"></div>
+                </div>
+            </div>
+
+            <!-- Blockchain Verification Badge -->
+            <div class="blockchain-badge-card glass" id="blockchain-badge" hidden>
+                <div class="chain-badge-header">
+                    <svg class="chain-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                    </svg>
+                    <span class="chain-badge-title" id="chain-badge-title">Verifying Report…</span>
+                </div>
+                <div class="chain-badge-body">
+                    <div class="chain-detail">
+                        <span class="chain-label">Status</span>
+                        <span class="chain-value chain-status-val" id="chain-status">Pending</span>
+                    </div>
+                    <div class="chain-detail">
+                        <span class="chain-label">Data Hash</span>
+                        <span class="chain-value mono" id="chain-data-hash" title="SHA-256 of scan result JSON">—</span>
+                    </div>
+                    <div class="chain-detail">
+                        <span class="chain-label">Tx Hash</span>
+                        <span class="chain-value mono" id="chain-tx-hash" title="Blockchain transaction hash">—</span>
+                    </div>
+                    <div class="chain-detail">
+                        <span class="chain-label">Network</span>
+                        <span class="chain-value" id="chain-network">—</span>
+                    </div>
+                </div>
+                <div class="chain-progress">
+                    <div class="chain-progress-bar" id="chain-progress-bar"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 6. Enterprise Section ==================== -->
+    <section class="enterprise-section" id="enterprise">
+        <div class="section-header">
+            <span class="section-overline" data-animate="fade-up">Built for Scale</span>
+            <h2 class="section-title" data-animate="fade-up" data-delay="0.1">Built for Modern<br>Infrastructure Teams
+            </h2>
+            <p class="section-subtitle" data-animate="fade-up" data-delay="0.2">
+                From single inspections to city-wide deployments. RoadVision Pro scales with your mission.
+            </p>
+        </div>
+
+        <div class="enterprise-grid">
+            <div class="enterprise-card" data-animate="fade-up" data-delay="0.1">
+                <div class="enterprise-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                </div>
+                <h3>REST API</h3>
+                <p>Production-ready endpoints with JWT auth, rate limiting, and comprehensive documentation.</p>
+            </div>
+
+            <div class="enterprise-card" data-animate="fade-up" data-delay="0.2">
+                <div class="enterprise-icon green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                </div>
+                <h3>Enterprise Security</h3>
+                <p>End-to-end encryption, role-based access control, and SOC 2-ready audit logging.</p>
+            </div>
+
+            <div class="enterprise-card" data-animate="fade-up" data-delay="0.3">
+                <div class="enterprise-icon cyan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                </div>
+                <h3>Real-Time Monitoring</h3>
+                <p>WebSocket-powered live dashboards with severity tracking, trend analysis, and alerting.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 7. Analytics Dashboard ==================== -->
+    <section class="analytics-section" id="dashboard">
+        <div class="section-header">
+            <span class="section-overline" data-animate="fade-up">Intelligence Layer</span>
+            <h2 class="section-title" data-animate="fade-up" data-delay="0.1">System Analytics</h2>
+            <p class="section-subtitle" data-animate="fade-up" data-delay="0.2">
+                Real-time monitoring and performance metrics across your entire inspection fleet.
+            </p>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="analytics-card-glass" data-animate="fade-up">
+                <h3 class="analytics-title">Detection History</h3>
+                <div class="chart-container"><canvas id="history-chart"></canvas></div>
+            </div>
+
+            <div class="analytics-card-glass" data-animate="fade-up" data-delay="0.1">
+                <h3 class="analytics-title">Severity Distribution</h3>
+                <div class="chart-container"><canvas id="severity-chart"></canvas></div>
+            </div>
+
+            <div class="analytics-card-glass wide" data-animate="fade-up" data-delay="0.2">
+                <h3 class="analytics-title">Risk Classification</h3>
+                <div class="risk-bars">
+                    <div class="risk-item">
+                        <div class="risk-bar-container">
+                            <div class="risk-bar low" style="--width: 60%"></div>
+                        </div>
+                        <span class="risk-label">Low Risk</span>
+                        <span class="risk-value">60%</span>
+                    </div>
+                    <div class="risk-item">
+                        <div class="risk-bar-container">
+                            <div class="risk-bar moderate" style="--width: 30%"></div>
+                        </div>
+                        <span class="risk-label">Moderate Risk</span>
+                        <span class="risk-value">30%</span>
+                    </div>
+                    <div class="risk-item">
+                        <div class="risk-bar-container">
+                            <div class="risk-bar severe" style="--width: 10%"></div>
+                        </div>
+                        <span class="risk-label">Severe Risk</span>
+                        <span class="risk-value">10%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 8. CTA ==================== -->
+    <section class="cta-section" id="cta">
+        <span class="section-overline" data-animate="fade-up">Ready to Transform?</span>
+        <h2 class="section-title" data-animate="fade-up" data-delay="0.1">
+            Stop guessing.<br><span class="text-gradient">Start seeing.</span>
+        </h2>
+        <p class="section-subtitle" data-animate="fade-up" data-delay="0.2">
+            Join the next generation of infrastructure teams using AI to protect roads,
+            reduce costs, and save lives.
+        </p>
+        <div style="margin-top:var(--space-xl)" data-animate="fade-up" data-delay="0.3">
+            <a href="#upload" class="btn-primary btn-large">
+                <span>Try It Free</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ==================== Footer ==================== -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="brand-logo small">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4" />
+                        <path
+                            d="M21 12c.552 0 1-.448 1-1V8c0-2.761-2.239-5-5-5H7C4.239 3 2 5.239 2 8v3c0 .552.448 1 1 1" />
+                    </svg>
+                </div>
+                <span class="brand-text">RoadVision<span class="brand-accent">Pro</span></span>
+            </div>
+            <p class="footer-tagline">Intelligent Infrastructure for Smart Cities</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Documentation</a>
+                <a href="#" class="footer-link">API</a>
+                <a href="/admin" class="footer-link">Admin</a>
+                <a href="/training" class="footer-link">Training</a>
+            </div>
+            <p class="footer-copyright">&copy; 2024 RoadVision AI. Production-grade AI SaaS Platform.</p>
+        </div>
+    </footer>
+
+    <!-- ==================== Modals ==================== -->
+    <div class="modal-overlay" id="modal-overlay" hidden></div>
+
+    <!-- Error Modal -->
+    <div class="modal-card" id="error-modal" hidden>
+        <div class="modal-icon error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+        </div>
+        <h3 class="modal-title">Error</h3>
+        <p class="modal-message" id="error-message">Something went wrong</p>
+        <button class="btn-primary" id="error-close">OK</button>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-card" id="success-modal" hidden>
+        <div class="modal-icon success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+        </div>
+        <h3 class="modal-title">Analysis Complete</h3>
+        <p class="modal-message" id="success-message">Cracks detected successfully!</p>
+        <button class="btn-primary" id="success-close">View Results</button>
+    </div>
+
+    <!-- Login Modal -->
+    {% if not demo_mode %}
+    <div class="modal-card glass" id="login-modal" hidden>
+        <h3 class="modal-title">Sign In</h3>
+        <form class="auth-form" id="login-form">
+            <div class="form-group">
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-primary btn-full">Sign In</button>
+        </form>
+        <p class="form-footer">Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+    </div>
+    {% endif %}
+
+    <!-- Scanning Overlay -->
+    <div class="scanning-overlay-full" id="scanning-overlay-full" hidden>
+        <div class="scanning-content">
+            <div class="scanning-rings-3d">
+                <div class="ring-3d"></div>
+                <div class="ring-3d"></div>
+                <div class="ring-3d"></div>
+            </div>
+            <div class="scanning-laser"></div>
+            <p class="scanning-text">AI Analyzing Surface...</p>
+            <p class="scanning-subtext">Processing with YOLOv8 Neural Network</p>
+        </div>
+    </div>
+
+    <!-- ==================== Scripts ==================== -->
+    <script src="/static/js/threeScene.js?v=12"></script>
+    <script src="/static/js/particles.js?v=8"></script>
+    <script src="/static/js/renderer.js?v=8"></script>
+    <script src="/static/js/dashboard.js?v=8"></script>
+    <script src="/static/js/api.js?v=8"></script>
+    <script src="/static/js/uiEffects.js?v=8"></script>
+    <script src="/static/js/cinematicScroll.js?v=1"></script>
+    <script src="/static/js/roadTextureGen.js?v=8"></script>
+    <script src="/static/js/aiPreviewRenderer.js?v=10"></script>
+    <script src="/static/js/web3.js?v=8"></script>
+    <script src="/static/js/app.js?v=10"></script>
+</body>
+
+</html>
