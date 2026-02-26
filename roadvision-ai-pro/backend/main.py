@@ -600,7 +600,7 @@ async def predict(
     temp_path = None
     
     try:
-        # Save temp file
+        # Save temp file (needed for EXIF GPS extraction)
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, f"{int(time.time())}_{file.filename}")
         contents = await file.read()
@@ -611,24 +611,28 @@ async def predict(
         with open(temp_path, "wb") as f:
             f.write(contents)
         
-        # Process image
-        image = cv2.imread(temp_path)
+        # Decode image directly from memory buffer (skip disk re-read)
+        nparr = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         if image is None:
             raise HTTPException(status_code=400, detail="Could not read image")
         
         height, width = image.shape[:2]
-        total_image_area = height * width
         
-        # Resize large images to speed up inference (YOLO rescales anyway)
-        MAX_DIM = 1280
+        # Resize large images to reduce memory (YOLO uses imgsz=640 internally)
+        MAX_DIM = 1920
         if max(height, width) > MAX_DIM:
             scale = MAX_DIM / max(height, width)
             image = cv2.resize(image, (int(width * scale), int(height * scale)))
             logger.info(f"Resized {width}x{height} → {image.shape[1]}x{image.shape[0]}")
+            height, width = image.shape[:2]  # update to resized dims
         
-        # Run inference with balanced confidence threshold
-        inference_start = time.time()  # measure only model time
-        results = model(image, verbose=False, conf=0.35, imgsz=640)
+        # total_image_area must match the coordinate space YOLO returns boxes in
+        total_image_area = height * width
+        
+        # Run inference — imgsz=640 for speed, max_det=50 to cap detections
+        inference_start = time.time()
+        results = model(image, verbose=False, conf=0.35, imgsz=640, max_det=50)
         
         # Extract GPS coordinates from image EXIF (if available)
         gps_lat, gps_lon = None, None

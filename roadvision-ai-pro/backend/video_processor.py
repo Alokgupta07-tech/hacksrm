@@ -26,6 +26,9 @@ class VideoProcessor:
 
         # Skip more frames in live mode for better latency
         skip = 10 if is_live else 5
+        # JPEG encode params — lower quality for streaming = faster + less bandwidth
+        encode_params = [cv2.IMWRITE_JPEG_QUALITY, 75]
+        last_encoded = None  # cache for skipped frames
 
         frame_count = 0
         while cap.isOpened():
@@ -35,7 +38,7 @@ class VideoProcessor:
 
             # Process every Nth frame for performance
             if frame_count % skip == 0:
-                results = self.model.predict(frame, conf=0.35, verbose=False)
+                results = self.model.predict(frame, conf=0.35, verbose=False, imgsz=640, max_det=50)
                 
                 # Annotate frame
                 for r in results:
@@ -71,12 +74,18 @@ class VideoProcessor:
                 self.lat += 0.00001
                 self.lon += 0.00001
 
-            # Encode frame to JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame_bytes = buffer.tobytes()
+                # Encode processed frame and cache it
+                ret, buffer = cv2.imencode('.jpg', frame, encode_params)
+                last_encoded = buffer.tobytes() if ret else last_encoded
+            else:
+                # Skipped frame — reuse last encoded frame (avoid re-encoding)
+                if last_encoded is None:
+                    ret, buffer = cv2.imencode('.jpg', frame, encode_params)
+                    last_encoded = buffer.tobytes() if ret else b''
 
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            if last_encoded:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + last_encoded + b'\r\n')
 
             frame_count += 1
             if not is_live:

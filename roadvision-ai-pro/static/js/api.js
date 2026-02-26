@@ -50,7 +50,7 @@ class APIClient {
     }
     
     // Predict
-    async predict(file, browserLat = null, browserLon = null) {
+    async predict(file, browserLat = null, browserLon = null, signal = null) {
         const formData = new FormData();
         formData.append('file', file);
         if (browserLat != null && browserLon != null) {
@@ -63,11 +63,14 @@ class APIClient {
             headers['Authorization'] = `Bearer ${this.token}`;
         }
         
-        const response = await fetch(`${this.baseURL}/predict`, {
+        const fetchOpts = {
             method: 'POST',
             headers: headers,
             body: formData
-        });
+        };
+        if (signal) fetchOpts.signal = signal;
+        
+        const response = await fetch(`${this.baseURL}/predict`, fetchOpts);
         
         if (!response.ok) {
             const error = await response.json();

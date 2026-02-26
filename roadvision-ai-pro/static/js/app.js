@@ -265,6 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        /* Abort any in-flight request to prevent duplicates */
+        if (appState._abortController) {
+            appState._abortController.abort();
+        }
+        appState._abortController = new AbortController();
+
         /* UI → loading */
         const btnText   = analyzeBtn?.querySelector('.btn-text');
         const btnLoader = analyzeBtn?.querySelector('.btn-loader');
@@ -284,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayVideoFeed(upload.video_id, upload.path);
             } else {
                 /* ── Image path: standard /predict ── */
-                const result = await api.predict(appState.currentFile, appState.browserLat, appState.browserLon);
+                const result = await api.predict(appState.currentFile, appState.browserLat, appState.browserLon, appState._abortController?.signal);
                 displayResults(result);
                 appState.analysisCount++;
 
@@ -296,12 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (err) {
+            if (err.name === 'AbortError') return; /* user cancelled — ignore */
             UIEffects.showError(err.message || 'Analysis failed. Please try again.');
         } finally {
             scanner.stop();
             if (btnText) btnText.hidden = false;
             if (btnLoader) btnLoader.hidden = true;
             if (analyzeBtn) analyzeBtn.disabled = false;
+            appState._abortController = null;
         }
     }
 
